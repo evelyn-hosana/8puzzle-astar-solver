@@ -51,18 +51,28 @@ def validate_puzzle_input(input_string):
 
 
 def main():
-    # gets and validates puzzle input from user
-    user_input = input("What sequence are you testing? ").strip()
-
-    # check if valid
-    is_valid, message = validate_puzzle_input(user_input)
+    # request initial state from user input, validate it and return if valid
+    initial_input = input("Enter the initial state: ").strip()
+    is_valid, message = validate_puzzle_input(initial_input)
     print(message)
 
-    if is_valid:
-        return user_input
-    else:
-        return None
+    if not is_valid:
+        return None, None
 
+    # request goal state from user input, validate it and return if valid
+    goal_input = input("Enter the goal state: ").strip()
+    is_valid, message = validate_puzzle_input(goal_input)
+    print(message)
+
+    if not is_valid:
+        return initial_input, None
+
+    # initial and goal states must be different
+    if initial_input == goal_input:
+        print("Error: Initial state and goal state cannot be the same")
+        return None, None
+
+    return initial_input, goal_input
 
 if __name__ == "__main__":
     main()
