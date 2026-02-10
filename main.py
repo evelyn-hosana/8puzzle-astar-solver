@@ -1,78 +1,78 @@
-def validate_puzzle_input(input_string):
-    # checks if puzzle input is valid
-    # format example: "7 2 4 5 _ 6 8 3 1" (digits 1-8 + underscore for blank)
+# TODO add imported libraries for queue
 
-    # clean up and split
-    elements = input_string.strip().split()
+# checks if puzzle input is valid
+def validate_puzzle_input(input_string):
+    # format example: "1 2 3 4 5 6 7 8 0" (0 considered blank space)
+    elements = input_string.strip().split() # cleanup and split
 
     # need exactly 9 elements
     if len(elements) != 9:
-        return False, f"Error: Expected 9 elements, but got {len(elements)}"
+        return False, None, f"Error: Expected 9 elements, but got {len(elements)}"
 
     # no commas
     if ',' in input_string:
-        return False, "Error: Use spaces to separate elements, not commas"
+        return False, None, "Error: Use spaces to separate elements, not commas"
 
-    # check blank space
-    underscore_count = elements.count('_')
-    if underscore_count == 0:
-        return False, "Error: Missing blank space '_'"
-    elif underscore_count > 1:
-        return False, f"Error: Found {underscore_count} blank spaces, need exactly 1"
+    # validate all elements are digits
+    for elem in elements:
+        if not elem.isdigit():
+            return False, None, f"Error: '{elem}' is not a valid digit"
+        if int(elem) < 0 or int(elem) > 8:
+            return False, None, f"Error: '{elem}' is out of range (use 0-8)"
 
-    # grab just digits
-    digits = [elem for elem in elements if elem != '_']
-
-    # need 8 digits
-    if len(digits) != 8:
-        return False, "Error: Must have exactly 8 digits and 1 blank space"
-
-    # validate each digit
-    for digit in digits:
-        if not digit.isdigit():
-            return False, f"Error: '{digit}' is not a valid digit"
-        if digit == '0':
-            return False, "Error: Use '_' for blank space, not '0'"
-        if int(digit) < 1 or int(digit) > 8:
-            return False, f"Error: '{digit}' is out of range (use 1-8)"
+    # extra validation: exactly one '0'
+    zero_count = elements.count('0')
+    if zero_count == 0:
+        return False, None, "Error: Missing blank space '0'"
+    elif zero_count > 1:
+        return False, None, f"Error: Found {zero_count} blank spaces, need exactly 1"
 
     # no duplicates allowed
-    digit_set = set(digits)
-    if len(digit_set) != 8:
-        return False, "Error: Each digit 1-8 must appear exactly once"
+    digit_set = set(elements)
+    if len(digit_set) != 9:
+        return False, None, "Error: Each digit 0-8 must appear exactly once"
 
-    # make sure 1-8 are all there
-    expected_digits = set('12345678')
+    # extra validation: check all digits exist
+    expected_digits = set('012345678')
     if digit_set != expected_digits:
         missing = expected_digits - digit_set
-        return False, f"Error: Missing digit(s): {', '.join(sorted(missing))}"
+        return False, None, f"Error: Missing digit(s): {', '.join(sorted(missing))}"
 
-    return True, "Correct string format!"
+    # return state as tuple of integers for easier processing
+    state = tuple(int(e) for e in elements)
+    return True, state, "Valid input!"
 
+# TODO: add print_board function to display puzzle states
 
 def main():
     # request initial state from user input, validate it and return if valid
     initial_input = input("Enter the initial state: ").strip()
-    is_valid, message = validate_puzzle_input(initial_input)
+    is_valid, initial_state, message = validate_puzzle_input(initial_input)
     print(message)
-
-    if not is_valid:
-        return None, None
+    if not is_valid: return None, None
 
     # request goal state from user input, validate it and return if valid
     goal_input = input("Enter the goal state: ").strip()
-    is_valid, message = validate_puzzle_input(goal_input)
+    is_valid, goal_state, message = validate_puzzle_input(goal_input)
     print(message)
+    if not is_valid: return initial_state, None
 
-    if not is_valid:
-        return initial_input, None
-
-    # initial and goal states must be different
-    if initial_input == goal_input:
+    # validate that initial and goal states do not contain the same value order
+    if initial_state == goal_state:
         print("Error: Initial state and goal state cannot be the same")
         return None, None
 
-    return initial_input, goal_input
+    return initial_state, goal_state
 
 if __name__ == "__main__":
-    main()
+    initial_state, goal_state = main()
+
+    if initial_state is None or goal_state is None:
+        print("Invalid input: Cannot run A* search")
+    else:
+        # TODO: import file(s) relating to astar search method (astar.py?)
+        # TODO: run astar for first heuristic (mistplaced tiles)
+        # TODO: run astar for second heuristic (manhattan distance)
+        # TODO: print whether each heuristic found a solution or not
+        # TODO: display solution path, nodes generated, and nodes expanded for both heuristics
+        pass
