@@ -1,4 +1,4 @@
-# TODO add imported libraries for queue
+from astar import astar, misplaced_tiles, manhattan_distance
 
 # checks if puzzle input is valid
 def validate_puzzle_input(input_string):
@@ -70,9 +70,13 @@ if __name__ == "__main__":
     if initial_state is None or goal_state is None:
         print("Invalid input: Cannot run A* search")
     else:
-        # TODO: import file(s) relating to astar search method (astar.py?)
-        # TODO: run astar for first heuristic (mistplaced tiles)
-        # TODO: run astar for second heuristic (manhattan distance)
-        # TODO: print whether each heuristic found a solution or not
+        result_h1 = astar(initial_state, goal_state, misplaced_tiles)
+        result_h2 = astar(initial_state, goal_state, manhattan_distance)
+
+        if result_h1: print("h1 (Misplaced Tiles): Solution found!")
+        else: print("h1 (Misplaced Tiles): No solution found.")
+
+        if result_h2: print("h2 (Manhattan Distance): Solution found!")
+        else: print("h2 (Manhattan Distance): No solution found.")
+
         # TODO: display solution path, nodes generated, and nodes expanded for both heuristics
-        pass
