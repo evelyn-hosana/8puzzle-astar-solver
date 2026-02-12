@@ -2,6 +2,7 @@ from astar import astar, misplaced_tiles, manhattan_distance
 
 # checks if puzzle input is valid
 def validate_puzzle_input(input_string):
+    """Validate a 3x3 8-puzzle state. Returns (ok, state_tuple, message)."""
     # format example: "1 2 3 4 5 6 7 8 0" (0 considered blank space)
     elements = input_string.strip().split() # cleanup and split
 
@@ -42,7 +43,26 @@ def validate_puzzle_input(input_string):
     state = tuple(int(e) for e in elements)
     return True, state, "Valid input!"
 
-# TODO: add print_board function to display puzzle states
+# function that prints puzzle states as 3x3 board
+def print_board(state):
+    for i in range(0, 9, 3):
+        row = state[i:i+3]
+        print(" ".join(str(x) if x != 0 else "_" for x in row))
+    print()
+
+def print_results(title, path, generated, expanded):
+    print(f"\n=== {title} ===")
+    if path is None:
+        print("No solution found.")
+    else:
+        print(f"Moves: {len(path) - 1}")
+        print("Solution path:")
+        for step, state in enumerate(path):
+            print(f"Step {step}:")
+            print_board(state)
+
+    print(f"Nodes generated: {generated}")
+    print(f"Nodes expanded:  {expanded}")
 
 def main():
     # request initial state from user input, validate it and return if valid
@@ -55,28 +75,31 @@ def main():
     goal_input = input("Enter the goal state: ").strip()
     is_valid, goal_state, message = validate_puzzle_input(goal_input)
     print(message)
-    if not is_valid: return initial_state, None
+    if not is_valid: return None, None
 
-    # validate that initial and goal states do not contain the same value order
+    # if start equals goal, report and skip running A*
     if initial_state == goal_state:
-        print("Error: Initial state and goal state cannot be the same")
-        return None, None
-
+        print("Initial state is already the goal state.")
+        print("Moves: 0")
+        print("Solution path:")
+        print_board(initial_state)
+        return initial_state, goal_state
+    
     return initial_state, goal_state
 
 if __name__ == "__main__":
-    initial_state, goal_state = main()
+    while True:
+        initial_state, goal_state = main()
 
-    if initial_state is None or goal_state is None:
-        print("Invalid input: Cannot run A* search")
-    else:
-        result_h1 = astar(initial_state, goal_state, misplaced_tiles)
-        result_h2 = astar(initial_state, goal_state, manhattan_distance)
+        if initial_state is None or goal_state is None:
+            print("Invalid input: Cannot run A* search")
+        else:
+            path1, gen1, exp1 = astar(initial_state, goal_state, misplaced_tiles)
+            path2, gen2, exp2 = astar(initial_state, goal_state, manhattan_distance)
 
-        if result_h1: print("h1 (Misplaced Tiles): Solution found!")
-        else: print("h1 (Misplaced Tiles): No solution found.")
+            print_results(" Misplaced Tiles (h1)", path1, gen1, exp1)
+            print_results(" Manhattan Distance (h2)", path2, gen2, exp2)
 
-        if result_h2: print("h2 (Manhattan Distance): Solution found!")
-        else: print("h2 (Manhattan Distance): No solution found.")
-
-        # TODO: display solution path, nodes generated, and nodes expanded for both heuristics
+        again = input("\nRun again? (y/n): ").strip().lower()
+        if again != "y":
+            break

@@ -9,7 +9,7 @@ def misplaced_tiles(state, goal):
             count += 1
     return count
 
-# h2: sum of each tile's |row + column| distance from goal
+# h2: sum of Manhattan distances (|Δrow| + |Δcol|) for each tile (skip blank)
 # admissible and better than h1 (h2 >= h1); A* expands fewer nodes with h2
 def manhattan_distance(state, goal):
     distance = 0
@@ -38,19 +38,46 @@ def get_neighbors(state):
             neighbors.append(tuple(state_list))
     return neighbors
 
+def reconstruct_path(parent, state):
+    path = []
+    while state is not None:
+        path.append(state)
+        state = parent.get(state)
+    path.reverse()
+    return path
+
+def inversion_parity(state):
+    arr = [x for x in state if x != 0]
+    inv = 0
+    for i in range(len(arr)):
+        for j in range(i + 1, len(arr)):
+            if arr[i] > arr[j]:
+                inv += 1
+    return inv % 2
+
+def is_solvable(initial, goal):
+    return inversion_parity(initial) == inversion_parity(goal)
+
 # A* search: f(n) = g(n) + h(n)
 # optimal when heuristic is admissible (both h1 and h2 are)
 def astar(initial, goal, heuristic):
-    # TODO: add nodes_generated counter
-    # TODO: add nodes_expanded counter
+    if initial == goal:
+        return [initial], 1, 0
 
+    if not is_solvable(initial, goal):
+        return None, 0, 0
+
+    nodes_generated = 1         # generated = pushed into frontier (incuding start) 
+    nodes_expanded = 0          # expanded = popped from frontier and processed 
+    
     h = heuristic(initial, goal)
     # frontier: min-heap sorted by f with tie-breaker (avoid tuple comparison)
     frontier = [(h, 0, initial, 0)]
     reached = set() # tracks expanded states
     counter = 1
 
-    # TODO: add parent tracking for path
+    parent = {initial: None}    # track parent of each state    
+    best_g = {initial: 0}       # best known g for each state
 
     while frontier:
         # pop state with lowest f(n)
@@ -60,21 +87,27 @@ def astar(initial, goal, heuristic):
         if state in reached: continue
         reached.add(state)
 
+        nodes_expanded += 1
+
         # goal test on expansion
         if state == goal:
-            # TODO: return solution path
-            return True
+            return reconstruct_path(parent, state), nodes_generated, nodes_expanded
 
         # expand: evaluate neighbors with f = g + h
         for neighbor in get_neighbors(state):
-            if neighbor not in reached:
+            new_g = g + 1
+            
+            # only consider this path if it is better than any previous one 
+            if neighbor not in best_g or new_g < best_g[neighbor]:
+                best_g[neighbor] = new_g
+                parent[neighbor] = state
+                
                 # g: parent cost + step cost
                 # h: heuristic estimate to goal
                 # f = g + h
-                new_g = g + 1
                 new_h = heuristic(neighbor, goal)
                 new_f = new_g + new_h
                 heapq.heappush(frontier, (new_f, counter, neighbor, new_g))
                 counter += 1
-
-    return False
+                nodes_generated += 1 
+    return None, nodes_generated, nodes_expanded
